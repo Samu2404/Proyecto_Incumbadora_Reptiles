@@ -6,4 +6,12 @@ Repositorio de github con la informacion referente al desarrollo de una incubado
 - Implementar el firmware de la solucion
 - Construir un prototipo de la dispositivo
 
-## Introduccion 
+## Introduccion al problema
+
+## Requerimientos del diseño 
+### Funcionales
+### No funcionales 
+
+## Componentes de la solucion
+### Componentes de hardware
+### Componente de firmware 
