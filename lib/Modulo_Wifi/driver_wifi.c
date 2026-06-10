@@ -1,7 +1,10 @@
 #include <string.h>
+#include <inttypes.h>
 #include "freertos/FreeRTOS.h"
+#include "esp_err.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
+#include "esp_netif.h"
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
@@ -13,6 +16,7 @@ static const char *TAG = "wifi_driver";
 
 // Variables de conexion wifi
 #define WIFI_AUTHMODE WIFI_AUTH_WPA2_PSK
+#define WIFI_HOSTNAME "esp32-node"
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT BIT1
 static const int WIFI_RETRY_ATTEMPT = 3;
@@ -25,6 +29,86 @@ static esp_event_handler_instance_t ip_event_handler;
 static esp_event_handler_instance_t wifi_event_handler;
 
 static EventGroupHandle_t s_wifi_event_group = NULL;
+
+/** @brief Callback para manejar eventos de IP
+ * @param arg puntero a datos de usuario
+ * @param event_base base de eventos
+ * @param event_id código del evento
+ * @param event_data puntero a datos del evento
+ */
+static void ip_event_cb(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
+{
+    ESP_LOGI(TAG, "Handling IP event, event code 0x%" PRIx32, event_id);
+    switch (event_id)
+    {
+    case (IP_EVENT_STA_GOT_IP):
+        ip_event_got_ip_t *event_ip = (ip_event_got_ip_t *)event_data;
+        ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event_ip->ip_info.ip));
+        wifi_retry_count = 0;
+        xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+        break;
+    case (IP_EVENT_STA_LOST_IP):
+        ESP_LOGI(TAG, "Lost IP");
+        break;
+    case (IP_EVENT_GOT_IP6):
+        ip_event_got_ip6_t *event_ip6 = (ip_event_got_ip6_t *)event_data;
+        ESP_LOGI(TAG, "Got IPv6: " IPV6STR, IPV62STR(event_ip6->ip6_info.ip));
+        wifi_retry_count = 0;
+        xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+        break;
+    default:
+        ESP_LOGI(TAG, "IP event not handled");
+        break;
+    }
+}
+
+/** @brief Callback para manejar eventos de Wi-Fi
+ * @param arg puntero a datos de usuario
+ * @param event_base base de eventos
+ * @param event_id código del evento
+ * @param event_data puntero a datos del evento
+ */
+static void wifi_event_cb(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
+{
+    ESP_LOGI(TAG, "Handling Wi-Fi event, event code 0x%" PRIx32, event_id);
+
+    switch (event_id)
+    {
+    case (WIFI_EVENT_WIFI_READY):
+        ESP_LOGI(TAG, "Wi-Fi listo");
+        break;
+    case (WIFI_EVENT_SCAN_DONE):
+        ESP_LOGI(TAG, "Wi-Fi escaneo completado");
+        break;
+    case (WIFI_EVENT_STA_START):
+        ESP_LOGI(TAG, "Wi-Fi iniciado, conectando...");
+        esp_wifi_connect();
+        break;
+    case (WIFI_EVENT_STA_STOP):
+        ESP_LOGI(TAG, "Wi-Fi detenido");
+        break;
+    case (WIFI_EVENT_STA_CONNECTED):
+        ESP_LOGI(TAG, "Wi-Fi conectado");
+        break;
+    case (WIFI_EVENT_STA_DISCONNECTED):
+        ESP_LOGI(TAG, "Wi-Fi desconectado");
+        if (wifi_retry_count < WIFI_RETRY_ATTEMPT) {
+            ESP_LOGI(TAG, "Intentanndo reconexion...");
+            esp_wifi_connect();
+            wifi_retry_count++;
+        } else {
+            ESP_LOGI(TAG, "Fallo en reconexion, alcanzado el maximo de intentos");
+            xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+        }
+        break;
+    case (WIFI_EVENT_STA_AUTHMODE_CHANGE):
+        ESP_LOGI(TAG, "Wi-Fi authmode cambiado");
+        break;
+    default:
+        ESP_LOGI(TAG, "evento Wi-Fi no manejado");
+        break;
+    }
+}
 
 
 /**     
@@ -64,6 +148,13 @@ esp_err_t wifi_init() {
         ESP_LOGE(TAG, "Error al crear la interfaz por defecto para WiFi STA");
         return ESP_FAIL;
     }
+
+    ret = esp_netif_set_hostname(wifi_netif, WIFI_HOSTNAME);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Error al configurar el hostname Wi-Fi");
+        return ret;
+    }
+    ESP_LOGI(TAG, "Hostname Wi-Fi configurado como: %s", WIFI_HOSTNAME);
 
     // Wi-Fi stack configuration parameters
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
@@ -140,11 +231,11 @@ esp_err_t wifi_disconnect(void) {
 * @brief Desinicializa el módulo Wi-Fi, deteniendo la conexión Wi-Fi, limpiando los recursos asociados y eliminando los handlers de eventos registrados
 * @return ESP_OK si la desinicialización fue exitosa, ESP_FAIL si hubo un error
 */
-esp_err_t wifi_deinit(void)
+esp_err_t wifi_deinitialization(void)
 {
     esp_err_t ret = esp_wifi_stop();
     if (ret == ESP_ERR_WIFI_NOT_INIT) {
-        ESP_LOGE(TAG, "Wi-Fi stack not initialized");
+        ESP_LOGE(TAG, "Wi-Fi stack no se ha inicializado");
         return ret;
     }
 

@@ -14,7 +14,6 @@ static esp_err_t i2c_validar_puerto(i2c_port_t port)
 	if (port < 0 || port >= I2C_SERVICIO_MAX_PUERTOS) {
 		return ESP_ERR_INVALID_ARG;
 	}
-
 	return ESP_OK;
 }
 
@@ -128,7 +127,8 @@ esp_err_t servicio_i2c_config_port(i2c_port_t port, int freq, gpio_num_t sda, gp
  * @param timeout Tiempo máximo para tomar el semáforo.
  * @return ESP_OK si la operación fue correcta, o un código de error en caso contrario.
  */
-esp_err_t servicio_i2c_write(i2c_device_t *device, const uint8_t *data, size_t data_len, TickType_t timeout)
+
+esp_err_t servicio_i2c_write(i2c_device_t *device, const uint8_t *data, TickType_t timeout)
 {
 	if (device == NULL) {
 		return ESP_ERR_INVALID_ARG;
@@ -139,7 +139,7 @@ esp_err_t servicio_i2c_write(i2c_device_t *device, const uint8_t *data, size_t d
 		return ret;
 	}
 
-	ret = i2c_write(device, data, data_len);
+	ret = i2c_write(device,data);
 
 	esp_err_t unlock_ret = i2c_soltar_mutex(device->port);
 	if (ret == ESP_OK && unlock_ret != ESP_OK) {
@@ -157,6 +157,7 @@ esp_err_t servicio_i2c_write(i2c_device_t *device, const uint8_t *data, size_t d
  * @param timeout Tiempo máximo para tomar el semáforo.
  * @return ESP_OK si la operación fue correcta, o un código de error en caso contrario.
  */
+
 esp_err_t servicio_i2c_read(i2c_device_t *device, uint8_t *data, size_t data_len, TickType_t timeout)
 {
 	if (device == NULL) {

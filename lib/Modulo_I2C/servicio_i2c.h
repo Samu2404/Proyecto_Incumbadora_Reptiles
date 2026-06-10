@@ -37,7 +37,7 @@ esp_err_t servicio_i2c_config_port(i2c_port_t port, int freq, gpio_num_t sda, gp
  * @param timeout Tiempo máximo para tomar el semáforo.
  * @return ESP_OK si la operación fue correcta, o un código de error en caso contrario.
  */
-esp_err_t servicio_i2c_write(i2c_device_t *device, const uint8_t *data, size_t data_len, TickType_t timeout);
+esp_err_t servicio_i2c_write(i2c_device_t *device, const uint8_t *data,TickType_t timeout);
 
 /**
  * @brief Lee datos desde un dispositivo I2C protegiendo el puerto con su semáforo.

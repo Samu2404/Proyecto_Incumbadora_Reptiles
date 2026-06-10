@@ -14,6 +14,7 @@ static const char *TAG = "DRIVER_I2C";
  * @param scl Pin GPIO para SCL.
  * @return ESP_OK si la configuración fue correcta, o un código de error en caso contrario.
  */
+
 esp_err_t i2c_config(i2c_port_t port, int freq, gpio_num_t sda, gpio_num_t scl)
 {
     i2c_config_t conf = {
@@ -35,7 +36,6 @@ esp_err_t i2c_config(i2c_port_t port, int freq, gpio_num_t sda, gpio_num_t scl)
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Error al instalar el driver I2C %d", port);
     }
-
     return ret;
 }
 
@@ -46,9 +46,9 @@ esp_err_t i2c_config(i2c_port_t port, int freq, gpio_num_t sda, gpio_num_t scl)
  * @param data_len Longitud de los datos a escribir.
  * @return ESP_OK si la operación fue exitosa, o un código de error en caso contrario.
  */
-esp_err_t i2c_write(i2c_device_t *device, const uint8_t *data, size_t data_len)
+esp_err_t i2c_write(i2c_device_t *device, const uint8_t data)
 {
-    if (device == NULL || data == NULL || data_len == 0) {
+    if (device == NULL || data == NULL) {
         return ESP_ERR_INVALID_ARG;
     }
 
@@ -60,7 +60,7 @@ esp_err_t i2c_write(i2c_device_t *device, const uint8_t *data, size_t data_len)
 
     i2c_master_start(cmd);
     i2c_master_write_byte(cmd, (device->address << 1) | I2C_MASTER_WRITE, true);
-    i2c_master_write(cmd, (uint8_t *)data, data_len, true);
+    i2c_master_write_byte(cmd, data, true);
     i2c_master_stop(cmd);
 
     esp_err_t ret = i2c_master_cmd_begin(device->port, cmd, pdMS_TO_TICKS(100));

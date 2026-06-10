@@ -11,7 +11,7 @@
 typedef struct {
     i2c_port_t port;
     uint8_t address;
-    const char *nombre;
+    const char *name;
 } i2c_device_t;
 
 /**
@@ -31,7 +31,7 @@ esp_err_t i2c_config(i2c_port_t port, int freq, gpio_num_t sda, gpio_num_t scl);
  * @param data_len Cantidad de bytes a escribir.
  * @return ESP_OK si la transferencia fue correcta, o un código de error en caso contrario.
  */
-esp_err_t i2c_write(i2c_device_t *device, const uint8_t *data, size_t data_len);
+esp_err_t i2c_write(i2c_device_t *device, const uint8_t data);
 
 /**
  * @brief Lee un bloque de datos desde un dispositivo I2C.
