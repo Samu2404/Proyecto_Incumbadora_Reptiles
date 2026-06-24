@@ -79,6 +79,8 @@ esp_err_t servicio_pwm_init (gpio_num_t pwm_pin){
     }
     timer_config(&timer_handler, 80, true, true, SPEED_UPDATE_DELAY_US); // Configura el timer para generar una interrupción cada 10 ms
     gptimer_register_isr(timer_handler, step_update_isr, NULL); // Registra la ISR para el timer
+    ESP_ERROR_CHECK(gptimer_enable(timer_handler));
+    ESP_ERROR_CHECK(gptimer_start(timer_handler));
 }
 
 

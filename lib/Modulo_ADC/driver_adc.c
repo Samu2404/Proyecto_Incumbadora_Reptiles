@@ -1,5 +1,6 @@
 #include "driver_adc.h"
 #include "esp_err.h"
+#include "esp_log.h"
 #include "stdlib.h"
 #include "esp_adc/adc_oneshot.h"
 #include "esp_adc/adc_cali.h"
@@ -33,9 +34,9 @@ esp_err_t adc_channel_config(adc_channel_t PIN_ADC) {
     return ret;
 }
 
-esp_err_t adc_cali_config(adc_channel_t PIN_ADC) {
+esp_err_t adc_cali_config(adc_unit_t unit_id, adc_channel_t PIN_ADC) {
     adc_cali_line_fitting_config_t cali_config = {
-        .unit_id = ADC_UNIT_1,
+        .unit_id = unit_id,
         .atten = ADC_ATTEN_DB_12,
         .bitwidth = ADC_BITWIDTH_DEFAULT,
     };
@@ -46,6 +47,8 @@ esp_err_t adc_cali_config(adc_channel_t PIN_ADC) {
     }
     return ret;
 }
+
+
 
 int adc_leer(adc_channel_t PIN_ADC) {
     int adc_value;

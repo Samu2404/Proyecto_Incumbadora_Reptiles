@@ -22,7 +22,7 @@ i2c_device_t lcd_1602_device ={
 
 #define WRITE_TIMEOUT_MS 10
 
-static esp_err_t lcd1602_send(uint1_t value) {
+static esp_err_t lcd1602_send(uint16_t value) {
     return servicio_i2c_write(&lcd_1602_device, &value, pdMS_TO_TICKS(WRITE_TIMEOUT_MS));
 }
 

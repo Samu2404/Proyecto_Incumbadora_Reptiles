@@ -28,7 +28,7 @@ esp_err_t timer_register_isr(gptimer_handle_t *timer_id, timer_isr_t isr_callbac
  * @param alarm_en Indicador de habilitación de alarma
  * @param alarm_value Valor de la alarma
  */
-void timer_config (gptimer_handle_t *timer_id, int divider, bool auto_reload, bool alarm_en, uint64_t alarm_value);
+esp_err_t timer_config (gptimer_handle_t *timer_id, int divider, bool auto_reload, bool alarm_en, uint64_t alarm_value);
 
 
 #endif

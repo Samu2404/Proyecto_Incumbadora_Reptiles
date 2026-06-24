@@ -12,7 +12,7 @@
 * @param intr_en true para habilitar interrupción, false para deshabilitar
 * @param alarm_value valor de la alarma en microsegundos
 */
-void timer_config (gptimer_handle_t *timer_id, int divider, bool auto_reload, bool alarm_en, uint64_t alarm_value) {
+esp_err_t timer_config (gptimer_handle_t *timer_id, int divider, bool auto_reload, bool alarm_en, uint64_t alarm_value) {
     gptimer_config_t timer_config = {
         .clk_src = GPTIMER_CLK_SRC_DEFAULT,
         .direction = GPTIMER_COUNT_UP,
@@ -28,8 +28,7 @@ void timer_config (gptimer_handle_t *timer_id, int divider, bool auto_reload, bo
         };
         ESP_ERROR_CHECK(gptimer_set_alarm_action(*timer_id, &alarm_config));
     };
-    ESP_ERROR_CHECK (gptimer_enable(*timer_id));
-    ESP_ERROR_CHECK(gptimer_start(*timer_id));
+    return ESP_OK;
 }
 
 /**
